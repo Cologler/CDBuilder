@@ -7,8 +7,6 @@ namespace CDBuilder
 {
     class Program
     {
-        private static readonly long Max = 24L * 1000 * 1000 * 1000;
-
         static void Main(string[] args)
         {
             var dirs = args
@@ -20,7 +18,7 @@ namespace CDBuilder
 
             var max = new long[]
             {
-                24218632192L,
+                24218238976L,
                 50L * 1000 * 1000 * 1000,
                 100L * 1000 * 1000 * 1000
             };
@@ -30,13 +28,19 @@ namespace CDBuilder
 
         static bool Calc(IEnumerable<Tuple<long, DirectoryInfo>> args, long max)
         {
-            var originColor = Console.ForegroundColor;
             Console.WriteLine($"================== {max} =================");
 
             var dirs = args
                 .Where(z =>
                 {
-                    if (z.Item1 >= max) Console.WriteLine($"'{z.Item2.Name}' was > max value so it will be ignore.");
+                    if (z.Item1 >= max)
+                    {
+                        using (new ConsoleTempEnvironment())
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"'{z.Item2.Name}' was > max value so it will be ignore.");
+                        }
+                    }
                     return z.Item1 < max;
                 })
                 .GroupBy(z => z.Item2.Name.ToUpper()[0])
@@ -60,17 +64,19 @@ namespace CDBuilder
                 Console.WriteLine();
 
                 var better = value.Item1 < max * 0.975;
-                Console.ForegroundColor = better ? ConsoleColor.Green : ConsoleColor.Yellow;
-                Console.WriteLine(better
-                    ? $"[b] total : {value.Item1} => {max} * {value.Item1 / (double)max}"
-                    : $"[t] total : {value.Item1} => {max} * {value.Item1 / (double)max}");
-                foreach (var dir in value.Item2)
+                using (new ConsoleTempEnvironment())
                 {
-                    Console.WriteLine(dir.Name);
+                    Console.ForegroundColor = better ? ConsoleColor.Green : ConsoleColor.Yellow;
+                    Console.WriteLine(better
+                        ? $"[b] total : {value.Item1} => {max} * {value.Item1 / (double)max}"
+                        : $"[t] total : {value.Item1} => {max} * {value.Item1 / (double)max}");
+                    foreach (var dir in value.Item2)
+                    {
+                        Console.WriteLine(dir.Name);
+                    }
                 }
-            }
 
-            Console.ForegroundColor = originColor;
+            }
             Console.WriteLine();
 
             return true;
