@@ -16,15 +16,32 @@ namespace CDBuilder
                 .Select(z => new DirectoryInfo(z))
                 .SelectMany(z => z.EnumerateDirectories())
                 .Select(z => new Tuple<long, DirectoryInfo>(GetFolderSize(z), z))
+                .ToArray();
+
+            var max = new long[]
+            {
+                24218632192L,
+                50L * 1000 * 1000 * 1000,
+                100L * 1000 * 1000 * 1000
+            };
+            var result = max.Select(z => Calc(dirs, z)).ToArray();
+            Console.Read();
+        }
+
+        static bool Calc(IEnumerable<Tuple<long, DirectoryInfo>> args, long max)
+        {
+            var originColor = Console.ForegroundColor;
+            Console.WriteLine($"================== {max} =================");
+
+            var dirs = args
                 .Where(z =>
                 {
-                    if (z.Item1 >= Max) Console.WriteLine($"'{z.Item2.Name}' was > max value so it will be ignore.");
-                    return z.Item1 < Max;
+                    if (z.Item1 >= max) Console.WriteLine($"'{z.Item2.Name}' was > max value so it will be ignore.");
+                    return z.Item1 < max;
                 })
-                .OrderBy(z => z.Item1)
                 .GroupBy(z => z.Item2.Name.ToUpper()[0])
                 .ToArray();
-            if (dirs.Length == 0) return;
+            if (dirs.Length == 0) return false;
 
             var ordered = new List<Tuple<long, List<DirectoryInfo>>>();
             foreach (var group in dirs)
@@ -32,22 +49,31 @@ namespace CDBuilder
                 ordered.AddRange(
                     JasilyIncrementBits.SelectItems(@group)
                         .Select(z => new Tuple<long, List<DirectoryInfo>>(
-                            Max - z.Sum(x => x.Item1),
+                            z.Sum(x => x.Item1),
                             z.Select(x => x.Item2).ToList()))
-                        .Where(z => z.Item1 > 0));
+                        .Where(z => max > z.Item1));
             }
-            ordered = ordered.OrderBy(z => z.Item1).ToList();
+            ordered = ordered.OrderByDescending(z => z.Item1).ToList();
 
-            var first = ordered.FirstOrDefault();
-            if (first != null)
+            foreach (var value in ordered.Where(z => z.Item1 > max * 0.95))
             {
-                Console.WriteLine($"total : {Max - first.Item1} => {Max}");
-                foreach (var dir in first.Item2)
+                Console.WriteLine();
+
+                var better = value.Item1 < max * 0.975;
+                Console.ForegroundColor = better ? ConsoleColor.Green : ConsoleColor.Yellow;
+                Console.WriteLine(better
+                    ? $"[b] total : {value.Item1} => {max} * {value.Item1 / (double)max}"
+                    : $"[t] total : {value.Item1} => {max} * {value.Item1 / (double)max}");
+                foreach (var dir in value.Item2)
                 {
                     Console.WriteLine(dir.Name);
                 }
             }
-            Console.Read();
+
+            Console.ForegroundColor = originColor;
+            Console.WriteLine();
+
+            return true;
         }
 
         private static long GetFolderSize(DirectoryInfo dir)
