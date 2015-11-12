@@ -18,7 +18,7 @@ namespace CDBuilder
 
             var max = new long[]
             {
-                24218238976L,
+                24200000000L,
                 50L * 1000 * 1000 * 1000,
                 100L * 1000 * 1000 * 1000
             };
@@ -59,25 +59,47 @@ namespace CDBuilder
             }
             ordered = ordered.OrderByDescending(z => z.Item1).ToList();
 
+            var dict = new Dictionary<int, List<DirectoryInfo>>();
+            var index = 0;
             foreach (var value in ordered.Where(z => z.Item1 > max * 0.95))
             {
+                dict[index] = value.Item2;
                 Console.WriteLine();
 
                 var better = value.Item1 < max * 0.975;
                 using (new ConsoleTempEnvironment())
                 {
                     Console.ForegroundColor = better ? ConsoleColor.Green : ConsoleColor.Yellow;
-                    Console.WriteLine(better
-                        ? $"[b] total : {value.Item1} => {max} * {value.Item1 / (double)max}"
-                        : $"[t] total : {value.Item1} => {max} * {value.Item1 / (double)max}");
+                    Console.WriteLine($"[{index}] total : {value.Item1} => {max} * {value.Item1 / (double)max}");
                     foreach (var dir in value.Item2)
                     {
                         Console.WriteLine(dir.Name);
                     }
                 }
 
+                index++;
             }
             Console.WriteLine();
+
+            if (dict.Count > 0)
+            {
+                Console.WriteLine("do you want to move file into :" + Environment.CurrentDirectory);
+                var input = Console.ReadLine();
+                int inputValue;
+                if (int.TryParse(input, out inputValue) && dict.ContainsKey(inputValue))
+                {
+                    var parent = Path.Combine(Environment.CurrentDirectory,
+                        dict[inputValue].First().Name.ToUpper()[0].ToString() + "x");
+                    if (Directory.Exists(parent)) return true;
+                    Directory.CreateDirectory(parent);
+                    foreach (var directoryInfo in dict[inputValue])
+                    {
+                        directoryInfo.MoveTo(Path.Combine(
+                            parent,
+                            directoryInfo.Name));
+                    }
+                }
+            }
 
             return true;
         }
