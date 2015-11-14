@@ -76,8 +76,12 @@ namespace CDBuilder
                         Console.WriteLine(dir.Name);
                     }
                 }
-
                 index++;
+                if (index % 100 == 0)
+                {
+                    Console.WriteLine("... MORE");
+                    Console.ReadKey();
+                }
             }
             Console.WriteLine();
 
