@@ -12,9 +12,11 @@ namespace CDBuilder
             return args.Where(Directory.Exists)
                 .Select(z => new DirectoryInfo(z))
                 .SelectMany(z => z.EnumerateFiles())
-                .Where(z => z.Name.ToLower().StartsWith("[sha1."))
+                .Where(z => z.Name.Length > 20 && z.Name.ToLower().StartsWith("[sha1."))
                 .ToArray();
         }
+
+        protected override string GroupBy(FileInfo item) => item.Name[6].ToString().ToUpper();
 
         protected override void MoveTo(FileInfo item, string newPath)
         {

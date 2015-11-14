@@ -43,7 +43,7 @@ namespace CDBuilder
                     }
                     return z.Item1 < max;
                 })
-                .GroupBy(z => z.Item2.Name.ToUpper()[0])
+                .GroupBy(z => this.GroupBy(z.Item2))
                 .ToArray();
             if (dirs.Length == 0) return false;
 
@@ -105,6 +105,8 @@ namespace CDBuilder
 
             return true;
         }
+
+        protected abstract string GroupBy(T item);
 
         protected abstract void MoveTo(T item, string newPath);
 

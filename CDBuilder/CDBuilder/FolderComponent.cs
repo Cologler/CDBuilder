@@ -16,6 +16,8 @@ namespace CDBuilder
                 .ToArray();
         }
 
+        protected override string GroupBy(DirectoryInfo item) => item.Name[0].ToString().ToUpper();
+
         protected override void MoveTo(DirectoryInfo item, string newPath)
         {
             item.MoveTo(newPath);
