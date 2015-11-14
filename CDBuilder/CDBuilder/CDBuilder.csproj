@@ -42,7 +42,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandAttribute.cs" />
+    <Compile Include="Component.cs" />
     <Compile Include="ConsoleTempEnvironment.cs" />
+    <Compile Include="FolderComponent.cs" />
+    <Compile Include="IComponent.cs" />
     <Compile Include="JasilyIncrementBits.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
