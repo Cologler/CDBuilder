@@ -2,6 +2,7 @@ using System;
 
 namespace CDBuilder
 {
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     class CommandAttribute : Attribute
     {
         public CommandAttribute(string command)

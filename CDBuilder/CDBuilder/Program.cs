@@ -9,7 +9,7 @@ namespace CDBuilder
         static void Main(string[] args)
         {
             var coms = Assembly.GetEntryAssembly().DefinedTypes
-                .Where(z => typeof(IComponent).IsAssignableFrom(z))
+                .Where(z => !z.IsGenericType && typeof(IComponent).IsAssignableFrom(z))
                 .Select(z =>
                 {
                     var component = (IComponent)z.GetConstructor(new Type[0])?.Invoke(new object[0]);

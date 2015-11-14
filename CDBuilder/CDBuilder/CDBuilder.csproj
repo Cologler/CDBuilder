@@ -45,6 +45,8 @@
     <Compile Include="CommandAttribute.cs" />
     <Compile Include="Component.cs" />
     <Compile Include="ConsoleTempEnvironment.cs" />
+    <Compile Include="FileComponent.cs" />
+    <Compile Include="FileSystemComponent.cs" />
     <Compile Include="FolderComponent.cs" />
     <Compile Include="IComponent.cs" />
     <Compile Include="JasilyIncrementBits.cs" />
