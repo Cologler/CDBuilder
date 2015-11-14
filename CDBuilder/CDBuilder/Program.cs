@@ -9,6 +9,29 @@ namespace CDBuilder
     {
         static void Main(string[] args)
         {
+            switch (args.Length > 0 ? args[0].ToLower() : null)
+            {
+                case "-sha1file":
+                    HandleSha1File(args.Skip(1));
+                    break;
+
+                case "-folder":
+                    HandleFolder(args.Skip(1));
+                    break;
+
+                default:
+                    Console.WriteLine("parameter error. first parameter should be '-folder' or '-sha1file'");
+                    return;
+            }
+        }
+
+        static void HandleSha1File(IEnumerable<string> args)
+        {
+
+        }
+
+        static void HandleFolder(IEnumerable<string> args)
+        {
             var dirs = args
                 .Where(Directory.Exists)
                 .Select(z => new DirectoryInfo(z))
