@@ -93,7 +93,7 @@ namespace CDBuilder
                 if (int.TryParse(input, out inputValue) && dict.ContainsKey(inputValue))
                 {
                     var parent = Path.Combine(Environment.CurrentDirectory,
-                        dict[inputValue].First().Name.ToUpper()[0].ToString() + "x");
+                        this.GroupBy(dict[inputValue].First()) + "x" + new Random().Next(100, 1000).ToString());
                     if (Directory.Exists(parent)) return true;
                     Directory.CreateDirectory(parent);
                     foreach (var directoryInfo in dict[inputValue])
