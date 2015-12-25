@@ -8,44 +8,90 @@ namespace CDBuilder
     abstract class FileSystemComponent<T> : IComponent
         where T : FileSystemInfo
     {
+        public long? Max { get; private set; }
+
+        public long? Min { get; private set; }
+
         public void Handle(IEnumerable<string> args)
         {
-            var dirs = this.CreateByArgs(args)
+            var dirs = this.CreateByArgs(args.Where(this.IsNotSetterArgs))
                 .Select(z => new Tuple<long, T>(this.GetSize(z), z))
                 .ToArray();
 
-            var max = new long[]
+            if (this.Max.HasValue && this.Min.HasValue)
             {
-                24200000000L,
-                50L * 1000 * 1000 * 1000,
-                100L * 1000 * 1000 * 1000
-            };
-            var result = max.Select(z => this.Calc(dirs, z)).ToArray();
+                this.Calc(dirs, this.Max.Value, this.Min.Value);
+            }
+            else
+            {
+                Console.WriteLine("max and min args not found.");
+            }
+
             Console.Read();
+        }
+
+        private bool IsNotSetterArgs(string arg)
+        {
+            var lower = arg.ToLower();
+            if (lower.StartsWith("-max:"))
+            {
+                try
+                {
+                    var value = CalcValue(lower.Substring(5));
+                    if (value.HasValue)
+                    {
+                        this.Max = value.Value;
+                        return false;
+                    }
+                }
+                catch (FormatException) { }
+            }
+            else if (lower.StartsWith("-min:"))
+            {
+                try
+                {
+                    var value = CalcValue(lower.Substring(5));
+                    if (value.HasValue)
+                    {
+                        this.Min = value.Value;
+                        return false;
+                    }
+                }
+                catch (FormatException) { }
+            }
+            return true;
+        }
+
+        private static long? CalcValue(string text)
+        {
+            if (text.Length == 0) return null;
+            return text
+                .Split(new[] { '+' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(z => z.Split(new[] { '*' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(long.Parse)
+                    .Aggregate(1L, (current, value) => current * value))
+                .Sum();
         }
 
         protected abstract IEnumerable<T> CreateByArgs(IEnumerable<string> args);
 
-        protected bool Calc(IEnumerable<Tuple<long, T>> args, long max)
+        protected void Calc(IEnumerable<Tuple<long, T>> args, long max, long min)
         {
-            Console.WriteLine($"================== {max} =================");
+            Console.WriteLine($"================== {min} ~ {max} =================");
 
-            var dirs = args
-                .Where(z =>
+            var dirs = args.Where(z =>
                 {
-                    if (z.Item1 >= max)
+                    if (z.Item1 < max) return true;
+                    using (new ConsoleTempEnvironment())
                     {
-                        using (new ConsoleTempEnvironment())
-                        {
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine($"'{z.Item2.Name}' was > max value so it will be ignore.");
-                        }
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"'{z.Item2.Name}' was > max value so it will be ignore.");
                     }
-                    return z.Item1 < max;
+                    return false;
                 })
                 .GroupBy(z => this.GroupBy(z.Item2))
                 .ToArray();
-            if (dirs.Length == 0) return false;
+            if (dirs.Length == 0) return;
 
             var ordered = new List<Tuple<long, List<T>>>();
             foreach (var group in dirs)
@@ -55,18 +101,18 @@ namespace CDBuilder
                         .Select(z => new Tuple<long, List<T>>(
                             z.Sum(x => x.Item1),
                             z.Select(x => x.Item2).ToList()))
-                        .Where(z => max > z.Item1));
+                        .Where(z => max > z.Item1 && z.Item1 > min));
             }
             ordered = ordered.OrderByDescending(z => z.Item1).ToList();
 
             var dict = new Dictionary<int, List<T>>();
             var index = 0;
-            foreach (var value in ordered.Where(z => z.Item1 > max * 0.95))
+            foreach (var value in ordered)
             {
                 dict[index] = value.Item2;
                 Console.WriteLine();
 
-                var better = value.Item1 < max * 0.975;
+                var better = max - value.Item1 < value.Item1 - min;
                 using (new ConsoleTempEnvironment())
                 {
                     Console.ForegroundColor = better ? ConsoleColor.Green : ConsoleColor.Yellow;
@@ -94,7 +140,7 @@ namespace CDBuilder
                 {
                     var parent = Path.Combine(Environment.CurrentDirectory,
                         this.GroupBy(dict[inputValue].First()) + "x" + new Random().Next(100, 1000).ToString());
-                    if (Directory.Exists(parent)) return true;
+                    if (Directory.Exists(parent)) return;
                     Directory.CreateDirectory(parent);
                     foreach (var directoryInfo in dict[inputValue])
                     {
@@ -102,8 +148,6 @@ namespace CDBuilder
                     }
                 }
             }
-
-            return true;
         }
 
         protected abstract string GroupBy(T item);
