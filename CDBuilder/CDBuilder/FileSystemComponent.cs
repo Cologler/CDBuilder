@@ -14,13 +14,13 @@ namespace CDBuilder
 
         public void Handle(IEnumerable<string> args)
         {
-            var dirs = this.CreateByArgs(args.Where(this.IsNotSetterArgs))
+            var items = this.CreateByArgs(args.Where(this.IsNotSetterArgs))
                 .Select(z => new Tuple<long, T>(this.GetSize(z), z))
                 .ToArray();
 
             if (this.Max.HasValue && this.Min.HasValue)
             {
-                this.Calc(dirs, this.Max.Value, this.Min.Value);
+                this.Calc(items, this.Max.Value, this.Min.Value);
             }
             else
             {

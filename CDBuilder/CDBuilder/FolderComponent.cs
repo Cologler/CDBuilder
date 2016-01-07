@@ -1,13 +1,15 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace CDBuilder
 {
     [Command("folder")]
     class FolderComponent : FileSystemComponent<DirectoryInfo>
     {
+        static readonly Regex RefName = new Regex(@"_(\d+)$");
+
         protected override IEnumerable<DirectoryInfo> CreateByArgs(IEnumerable<string> args)
         {
             return args.Where(Directory.Exists)
@@ -25,19 +27,14 @@ namespace CDBuilder
 
         protected override long GetSize(DirectoryInfo item)
         {
-            long size = 0;
-            foreach (var file in item.EnumerateFiles())
-            {
-                try
-                {
-                    size += file.Length;
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"get file size error on '{Path.Combine(item.FullName, file.Name)}': " + e.Message);
-                }
-            }
-            size += item.EnumerateDirectories().Sum(subDir => this.GetSize(subDir));
+            var match = RefName.Match(item.Name);
+            return match.Success ? long.Parse(match.Groups[1].Value) : GetFolerSize(item);
+        }
+
+        internal static long GetFolerSize(DirectoryInfo folder)
+        {
+            var size = folder.EnumerateFiles().Sum(z => z.Length);
+            size += folder.EnumerateDirectories().Sum(z => GetFolerSize(z));
             return size;
         }
     }
